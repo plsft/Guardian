@@ -1,0 +1,422 @@
+using Guardian; 
+
+try
+	{
+		// Valid usage
+		var product = new Product(
+			Guid.NewGuid(),
+			"Laptop",
+			999.99m,
+			10,
+			ProductStatus.Available
+		);
+
+		Console.WriteLine("Product created successfully!");
+
+		//Invalid usage examples (would throw exceptions)
+		
+		var invalidProduct = new Product(
+		    Guid.Empty,                   // Default Guid
+		    "",                           // Empty string
+		    -10m,                         // Negative price
+		    -5,                           // Negative quantity
+		    (ProductStatus)999            // Invalid enum value
+		);
+	}
+
+			catch (ArgumentException ex)
+{
+	Console.WriteLine($"Validation error: {ex.Message}");
+}
+
+public enum ProductStatus
+{
+	Available,
+	OutOfStock,
+	Discontinued
+}
+
+public class Product
+{
+	public Guid Id { get; private set; }
+	public string Name { get; private set; }
+	public decimal Price { get; private set; }
+	public int StockQuantity { get; private set; }
+	public ProductStatus Status { get; private set; }
+
+	public Product(Guid id, string name, decimal price, int stockQuantity, ProductStatus status)
+	{
+		// Validate all inputs using Guard clauses
+		Id = Guard.Against.Default(id, nameof(id));
+		Name = Guard.Against.NullOrWhiteSpace(name, nameof(name));
+		Name = Guard.Against.InvalidLength(name, nameof(name), 2, 100);
+		Price = Guard.Against.NegativeOrZero(price, nameof(price));
+		StockQuantity = Guard.Against.Negative(stockQuantity, nameof(stockQuantity));
+		Status = Guard.Against.NotInEnum(status, nameof(status));
+	}
+
+	public void UpdatePrice(decimal newPrice)
+	{
+		// Validate input parameter
+		Guard.Against.NegativeOrZero(newPrice, nameof(newPrice));
+
+		// Method implementation
+		Price = newPrice;
+	}
+
+	public void AddStock(int quantity)
+	{
+		// Validate input parameter
+		Guard.Against.NegativeOrZero(quantity, nameof(quantity));
+
+		// Method implementation
+		StockQuantity += quantity;
+	}
+
+	public void RemoveStock(int quantity)
+	{
+		// Multiple validations
+		Guard.Against.NegativeOrZero(quantity, nameof(quantity));
+		Guard.Against.Condition(
+			quantity <= StockQuantity,
+			nameof(quantity),
+			$"Cannot remove {quantity} items when only {StockQuantity} are in stock."
+		);
+
+		// Method implementation
+		StockQuantity -= quantity;
+	}
+
+	public void SetStatus(ProductStatus newStatus)
+	{
+		// Validate enum input
+		Guard.Against.NotInEnum(newStatus, nameof(newStatus));
+
+		// Custom business logic validation
+		if (newStatus == ProductStatus.Available)
+		{
+			Guard.Against.Condition(
+				StockQuantity > 0,
+				nameof(newStatus),
+				"Cannot set status to Available when stock quantity is 0."
+			);
+		}
+
+		// Method implementation
+		Status = newStatus;
+	}
+}
+
+public class Order
+{
+	public Guid Id { get; private set; }
+	public string CustomerEmail { get; private set; }
+	public decimal TotalAmount { get; private set; }
+
+	private readonly List<Guid> _productIds = new List<Guid>();
+
+	public IReadOnlyCollection<Guid> ProductIds => _productIds.AsReadOnly();
+
+	public Order(Guid id, string customerEmail, decimal totalAmount, List<Guid> productIds)
+	{
+		// Validate all inputs
+		Id = Guard.Against.Default(id, nameof(id));
+
+		// Validate email format using regex
+		CustomerEmail = Guard.Against.InvalidFormat(
+			customerEmail,
+			nameof(customerEmail),
+			@"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+		);
+
+		// Validate amount within acceptable range
+		TotalAmount = Guard.Against.OutOfRange(
+			totalAmount,
+			nameof(totalAmount),
+			0.01m,
+			10000m
+		);
+
+		// Validate collection
+		_productIds.AddRange(Guard.Against.NullOrEmpty(productIds, nameof(productIds)));
+	}
+
+	public void AddProductId(Guid productId)
+	{
+		// Validate input
+		Guard.Against.Default(productId, nameof(productId));
+
+		// Validate not already in collection (custom condition)
+		Guard.Against.Condition(
+			!_productIds.Contains(productId),
+			nameof(productId),
+			"Product is already in the order."
+		);
+
+		// Method implementation
+		_productIds.Add(productId);
+	}
+}
+
+
+namespace Guardian
+{
+	/// <summary>
+	/// Entry point for the guard clauses.
+	/// </summary>
+	public static class Guard
+	{
+		/// <summary>
+		/// Provides access to all guard clauses.
+		/// </summary>
+		public static class Against
+		{
+			/// <summary>
+			/// Th
+			/// rows an <see cref="ArgumentNullException"/> if the value is null.
+			/// </summary>
+			/// <typeparam name="T">The type of the value to check.</typeparam>
+			/// <param name="value">The value to check.</param>
+			/// <param name="parameterName">The name of the parameter being checked.</param>
+			/// <returns>The original value if not null.</returns>
+			public static T Null<T>(T value, string parameterName)
+			{
+				if (value == null)
+				{
+					throw new ArgumentNullException(parameterName);
+				}
+
+				return value;
+			}
+
+			/// <summary>
+			/// Throws an <see cref="ArgumentException"/> if the string is null or whitespace.
+			/// </summary>
+			/// <param name="value">The string to check.</param>
+			/// <param name="parameterName">The name of the parameter being checked.</param>
+			/// <returns>The original value if not null or whitespace.</returns>
+			public static string NullOrWhiteSpace(string value, string parameterName)
+			{
+				if (string.IsNullOrWhiteSpace(value))
+				{
+					throw new ArgumentException("Value cannot be null or whitespace.", parameterName);
+				}
+
+				return value;
+			}
+
+			/// <summary>
+			/// Throws an <see cref="ArgumentException"/> if the value is default for its type.
+			/// </summary>
+			/// <typeparam name="T">The type of the value to check.</typeparam>
+			/// <param name="value">The value to check.</param>
+			/// <param name="parameterName">The name of the parameter being checked.</param>
+			/// <returns>The original value if not default.</returns>
+			public static T Default<T>(T value, string parameterName)
+			{
+				if (EqualityComparer<T>.Default.Equals(value, default))
+				{
+					throw new ArgumentException($"Value cannot be the default value for {typeof(T).Name}.", parameterName);
+				}
+
+				return value;
+			}
+
+			/// <summary>
+			/// Throws an <see cref="ArgumentOutOfRangeException"/> if the value is zero or negative.
+			/// </summary>
+			/// <param name="value">The value to check.</param>
+			/// <param name="parameterName">The name of the parameter being checked.</param>
+			/// <returns>The original value if positive (greater than zero).</returns>
+			public static T NegativeOrZero<T>(T value, string parameterName) where T : IComparable<T>
+			{
+				if (value.CompareTo(default) <= 0)
+				{
+					throw new ArgumentOutOfRangeException(parameterName, value, "Value must be positive (greater than zero).");
+				}
+
+				return value;
+			}
+
+			/// <summary>
+			/// Throws an <see cref="ArgumentOutOfRangeException"/> if the value is negative.
+			/// </summary>
+			/// <param name="value">The value to check.</param>
+			/// <param name="parameterName">The name of the parameter being checked.</param>
+			/// <returns>The original value if not negative.</returns>
+			public static T Negative<T>(T value, string parameterName) where T : IComparable<T>
+			{
+				if (value.CompareTo(default) < 0)
+				{
+					throw new ArgumentOutOfRangeException(parameterName, value, "Value cannot be negative.");
+				}
+
+				return value;
+			}
+
+			/// <summary>
+			/// Throws an <see cref="ArgumentOutOfRangeException"/> if the value is outside the specified range.
+			/// </summary>
+			/// <typeparam name="T">The type of the value to check.</typeparam>
+			/// <param name="value">The value to check.</param>
+			/// <param name="parameterName">The name of the parameter being checked.</param>
+			/// <param name="min">The minimum allowed value.</param>
+			/// <param name="max">The maximum allowed value.</param>
+			/// <param name="includeMin">Whether the minimum value is inclusive.</param>
+			/// <param name="includeMax">Whether the maximum value is inclusive.</param>
+			/// <returns>The original value if within range.</returns>
+			public static T OutOfRange<T>(T value, string parameterName, T min, T max, bool includeMin = true, bool includeMax = true) where T : IComparable<T>
+			{
+				bool isOutOfRange = false;
+
+				if (includeMin)
+				{
+					if (value.CompareTo(min) < 0)
+					{
+						isOutOfRange = true;
+					}
+				}
+				else
+				{
+					if (value.CompareTo(min) <= 0)
+					{
+						isOutOfRange = true;
+					}
+				}
+
+				if (includeMax)
+				{
+					if (value.CompareTo(max) > 0)
+					{
+						isOutOfRange = true;
+					}
+				}
+				else
+				{
+					if (value.CompareTo(max) >= 0)
+					{
+						isOutOfRange = true;
+					}
+				}
+
+				if (isOutOfRange)
+				{
+					var minSymbol = includeMin ? "[" : "(";
+					var maxSymbol = includeMax ? "]" : ")";
+					throw new ArgumentOutOfRangeException(parameterName, value, $"Value must be in range {minSymbol}{min}, {max}{maxSymbol}.");
+				}
+
+				return value;
+			}
+
+			/// <summary>
+			/// Throws an <see cref="ArgumentException"/> if the value is not a defined value of the specified enum type.
+			/// </summary>
+			/// <typeparam name="TEnum">The enum type.</typeparam>
+			/// <param name="value">The value to check.</param>
+			/// <param name="parameterName">The name of the parameter being checked.</param>
+			/// <returns>The original value if it is a defined enum value.</returns>
+			public static TEnum NotInEnum<TEnum>(TEnum value, string parameterName) where TEnum : struct, Enum
+			{
+				if (!Enum.IsDefined(typeof(TEnum), value))
+				{
+					throw new ArgumentException($"Value {value} is not defined in enum {typeof(TEnum).Name}.", parameterName);
+				}
+
+				return value;
+			}
+
+			/// <summary>
+			/// Throws an <see cref="ArgumentException"/> if the collection is null or empty.
+			/// </summary>
+			/// <typeparam name="T">The type of items in the collection.</typeparam>
+			/// <param name="collection">The collection to check.</param>
+			/// <param name="parameterName">The name of the parameter being checked.</param>
+			/// <returns>The original collection if not null or empty.</returns>
+			public static IEnumerable<T> NullOrEmpty<T>(IEnumerable<T> collection, string parameterName)
+			{
+				if (collection == null)
+				{
+					throw new ArgumentNullException(parameterName);
+				}
+
+				if (!collection.Any())
+				{
+					throw new ArgumentException("Collection cannot be empty.", parameterName);
+				}
+
+				return collection;
+			}
+
+			/// <summary>
+			/// Throws an <see cref="ArgumentException"/> if the condition is false.
+			/// </summary>
+			/// <param name="condition">The condition to check.</param>
+			/// <param name="parameterName">The name of the parameter being checked.</param>
+			/// <param name="message">The error message to throw if the condition is false.</param>
+			public static void Condition(bool condition, string parameterName, string message)
+			{
+				if (!condition)
+				{
+					throw new ArgumentException(message, parameterName);
+				}
+			}
+
+			/// <summary>
+			/// Throws an <see cref="ArgumentException"/> if the string doesn't match the specified regex pattern.
+			/// </summary>
+			/// <param name="value">The string to check.</param>
+			/// <param name="parameterName">The name of the parameter being checked.</param>
+			/// <param name="pattern">The regex pattern to match.</param>
+			/// <returns>The original value if it matches the pattern.</returns>
+			public static string InvalidFormat(string value, string parameterName, string pattern)
+			{
+				Null(value, parameterName);
+
+				if (!Regex.IsMatch(value, pattern))
+				{
+					throw new ArgumentException($"Value does not match the required format: {pattern}", parameterName);
+				}
+
+				return value;
+			}
+
+			/// <summary>
+			/// Throws an <see cref="ArgumentOutOfRangeException"/> if the string length is outside the specified range.
+			/// </summary>
+			/// <param name="value">The string to check.</param>
+			/// <param name="parameterName">The name of the parameter being checked.</param>
+			/// <param name="minLength">The minimum allowed length.</param>
+			/// <param name="maxLength">The maximum allowed length.</param>
+			/// <returns>The original value if its length is within range.</returns>
+			public static string InvalidLength(string value, string parameterName, int minLength, int maxLength)
+			{
+				Null(value, parameterName);
+
+				if (value.Length < minLength || value.Length > maxLength)
+				{
+					throw new ArgumentOutOfRangeException(parameterName, value.Length, $"String length must be between {minLength} and {maxLength}.");
+				}
+
+				return value;
+			}
+
+			/// <summary>
+			/// Throws an <see cref="ArgumentException"/> if the value is not one of the allowed values.
+			/// </summary>
+			/// <typeparam name="T">The type of the value to check.</typeparam>
+			/// <param name="value">The value to check.</param>
+			/// <param name="parameterName">The name of the parameter being checked.</param>
+			/// <param name="allowedValues">The allowed values.</param>
+			/// <returns>The original value if it is one of the allowed values.</returns>
+			public static T NotOneOf<T>(T value, string parameterName, params T[] allowedValues)
+			{
+				if (!allowedValues.Contains(value))
+				{
+					throw new ArgumentException($"Value must be one of: {string.Join(", ", allowedValues)}", parameterName);
+				}
+
+				return value;
+			}
+		}
+	}
