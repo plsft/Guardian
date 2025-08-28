@@ -9,7 +9,10 @@
       "Bash(dotnet pack:*)",
       "Bash(git init:*)",
       "Bash(git remote add:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(move DocumentationExamplesTest.cs Program.cs)",
+      "Bash(del DocumentationExamplesTest.cs)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
