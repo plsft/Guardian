@@ -1,6 +1,6 @@
 # Guardian
 
-[![NuGet](https://img.shields.io/nuget/v/Guardian.svg)](https://www.nuget.org/packages/Guardian/)
+[![NuGet](https://img.shields.io/nuget/v/Noundry.Guardian.svg)](https://www.nuget.org/packages/Noundry.Guardian/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET](https://img.shields.io/badge/.NET-6.0%20%7C%207.0%20%7C%208.0-512BD4)](https://dotnet.microsoft.com/)
 
@@ -20,19 +20,19 @@ Guardian is a lightweight, high-performance library providing guard clauses for 
 Install Guardian via NuGet:
 
 ```bash
-dotnet add package Guardian
+dotnet add package Noundry.Guardian
 ```
 
 Or via Package Manager Console:
 
 ```powershell
-Install-Package Guardian
+Install-Package Noundry.Guardian
 ```
 
 ## Quick Start
 
 ```csharp
-using Guardian;
+using Noundry.Guardian;
 
 public class Product
 {

@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Guardian
+namespace Noundry.Guardian
 {
     /// <summary>
     /// Extension methods for Guard clauses to provide a unified API.

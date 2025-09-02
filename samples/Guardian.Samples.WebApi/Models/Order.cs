@@ -1,6 +1,6 @@
-using Guardian;
+using Noundry.Guardian;
 
-namespace Guardian.Samples.WebApi.Models
+namespace Noundry.Guardian.Samples.WebApi.Models
 {
     public enum OrderStatus
     {

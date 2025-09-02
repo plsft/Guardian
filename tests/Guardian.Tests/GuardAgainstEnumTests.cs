@@ -1,8 +1,9 @@
 using System;
 using FluentAssertions;
 using Xunit;
+using Noundry.Guardian;
 
-namespace Guardian.Tests
+namespace Noundry.Guardian.Tests
 {
     public class GuardAgainstEnumTests
     {

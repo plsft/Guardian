@@ -1,8 +1,8 @@
-using Guardian;
+using Noundry.Guardian;
 using System;
 using System.Collections.Generic;
 
-namespace Guardian.Samples.Console
+namespace Noundry.Guardian.Samples.Console
 {
     class Program
     {

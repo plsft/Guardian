@@ -12,7 +12,8 @@
       "Bash(git add:*)",
       "Bash(move DocumentationExamplesTest.cs Program.cs)",
       "Bash(del DocumentationExamplesTest.cs)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(dotnet restore:*)"
     ],
     "deny": [],
     "ask": []

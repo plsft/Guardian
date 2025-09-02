@@ -1,8 +1,9 @@
 using System;
 using FluentAssertions;
+using Noundry.Guardian;
 using Xunit;
 
-namespace Guardian.Tests
+namespace Noundry.Guardian.Tests
 {
     public class GuardAgainstConditionTests
     {

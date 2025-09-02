@@ -1,8 +1,8 @@
-using Guardian;
-using Guardian.Samples.WebApi.Models;
+using Noundry.Guardian;
+using Noundry.Guardian.Samples.WebApi.Models;
 using System.Collections.Concurrent;
 
-namespace Guardian.Samples.WebApi.Services
+namespace Noundry.Guardian.Samples.WebApi.Services
 {
     public interface IProductService
     {

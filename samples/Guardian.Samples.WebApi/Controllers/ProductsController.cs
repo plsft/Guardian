@@ -1,9 +1,9 @@
-using Guardian;
-using Guardian.Samples.WebApi.Models;
-using Guardian.Samples.WebApi.Services;
+using Noundry.Guardian;
+using Noundry.Guardian.Samples.WebApi.Models;
+using Noundry.Guardian.Samples.WebApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Guardian.Samples.WebApi.Controllers
+namespace Noundry.Guardian.Samples.WebApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

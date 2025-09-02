@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
 #endif
 
-namespace Guardian
+namespace Noundry.Guardian
 {
     /// <summary>
     /// Entry point for guard clauses that provide parameter validation.

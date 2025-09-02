@@ -1,6 +1,6 @@
-using Guardian;
-using Guardian.Samples.WebApi.Models;
-using Guardian.Samples.WebApi.Services;
+using Noundry.Guardian;
+using Noundry.Guardian.Samples.WebApi.Models;
+using Noundry.Guardian.Samples.WebApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
